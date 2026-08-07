@@ -1,0 +1,85 @@
+configfile: "../config/config.yaml"
+
+MODELS = ["S0", "T1", "T2", "T3"]
+POPS = list(config["populations"].keys())
+POP_ARGS = [f"{name}={code}" for code, name in config["populations"].items()]
+PROJ = ",".join(map(str, config["projections"]))
+QC = config["qc"]
+
+rule all:
+    input:
+        expand("results/gadma/{model}/GADMA.log", model=MODELS)
+
+rule validate:
+    input: bcf=config["input_bcf"], metadata=config["metadata"]
+    output: "results/qc/metadata_validation.txt"
+    conda: "../envs/qc.yaml"
+    shell:
+        "python workflow/scripts/validate_metadata.py {input.bcf} {input.metadata} {output} " +
+        " ".join("'" + p + "'" for p in config["populations"].values())
+
+rule normalize_filter:
+    input: bcf=config["input_bcf"], checked="results/qc/metadata_validation.txt"
+    output: "results/qc/filtered.bcf"
+    conda: "../envs/qc.yaml"
+    shell:
+        "bcftools view -m{QC[min_alleles]} -M{QC[max_alleles]} -v snps {input.bcf} -Ou | "
+        "bcftools filter -e 'F_MISSING>{QC[max_missing]} || MAC<{QC[min_mac]}' -S . -Ou | "
+        "bcftools +setGT -Ou -- -t q -n . -i 'FMT/GQ<{QC[min_gq]} || FMT/DP<{QC[min_dp]} || FMT/DP>{QC[max_dp]}' | "
+        "bcftools view -Ob -o {output} && bcftools index -f {output}"
+
+rule plink_import:
+    input: "results/qc/filtered.bcf"
+    output: "results/qc/plink.pgen", "results/qc/plink.pvar", "results/qc/plink.psam"
+    conda: "../envs/qc.yaml"
+    shell: "plink2 --bcf {input} --make-pgen --out results/qc/plink"
+
+rule ld_prune:
+    input: "results/qc/plink.pgen", "results/qc/plink.pvar", "results/qc/plink.psam"
+    output: "results/qc/ld.prune.in"
+    conda: "../envs/qc.yaml"
+    shell: "plink2 --pfile results/qc/plink --indep-pairwise {QC[ld_window_kb]}kb {QC[ld_step]} {QC[ld_r2]} --out results/qc/ld"
+
+rule unrelated:
+    input: pgen="results/qc/plink.pgen", pvar="results/qc/plink.pvar", psam="results/qc/plink.psam", prune="results/qc/ld.prune.in"
+    output: "results/qc/unrelated.king.cutoff.in.id"
+    conda: "../envs/qc.yaml"
+    shell: "plink2 --pfile results/qc/plink --extract {input.prune} --king-cutoff {QC[king_cutoff]} --out results/qc/unrelated"
+
+rule popfile:
+    input: metadata=config["metadata"], keep="results/qc/unrelated.king.cutoff.in.id"
+    output: "results/sfs/populations.tsv"
+    conda: "../envs/qc.yaml"
+    shell: "python workflow/scripts/make_popfiles.py {input.metadata} {input.keep} {output} " + " ".join("'" + x + "'" for x in POP_ARGS)
+
+rule unrelated_vcf:
+    input: bcf="results/qc/filtered.bcf", keep="results/qc/unrelated.king.cutoff.in.id"
+    output: "results/qc/unrelated.vcf.gz"
+    conda: "../envs/qc.yaml"
+    shell: "bcftools view -S {input.keep} -Oz -o {output} {input.bcf} && tabix -f -p vcf {output}"
+
+rule sfs_preview:
+    input: vcf="results/qc/unrelated.vcf.gz", pop="results/sfs/populations.tsv"
+    output: "results/sfs/preview.txt"
+    conda: "../envs/sfs.yaml"
+    shell: "easySFS.py -i {input.vcf} -p {input.pop} --preview > {output}"
+
+rule sfs:
+    input: vcf="results/qc/unrelated.vcf.gz", pop="results/sfs/populations.tsv", preview="results/sfs/preview.txt"
+    output: "results/sfs/dadi/A-G-M-{proj}.sfs"
+    params: proj=PROJ
+    conda: "../envs/sfs.yaml"
+    shell: "easySFS.py -i {input.vcf} -p {input.pop} --proj {params.proj} -a -f -o results/sfs && test -s {output}"
+
+rule gadma_params:
+    input: sfs="results/sfs/dadi/A-G-M-{proj}.sfs"
+    output: "results/gadma/{model}.params"
+    conda: "../envs/gadma.yaml"
+    shell: "python workflow/scripts/render_gadma_params.py config/config.yaml {wildcards.model} {input.sfs} {output}"
+
+rule gadma:
+    input: "results/gadma/{model}.params"
+    output: "results/gadma/{model}/GADMA.log"
+    conda: "../envs/gadma.yaml"
+    shell: "gadma -p {input}"
+

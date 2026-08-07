@@ -1,0 +1,9 @@
+raw/*
+!raw/.gitkeep
+results/
+.snakemake/
+.reference/
+*.log
+__pycache__/
+*.pyc
+

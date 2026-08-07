@@ -1,0 +1,15 @@
+name: jews-demography
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - python=3.10
+  - snakemake-minimal=8
+  - bcftools=1.21
+  - htslib=1.21
+  - plink2=2.00a5.12
+  - pip
+  - pip:
+      - git+https://github.com/isaacovercast/easySFS.git@master
+      - gadma==2.0.0
+      - moments-popgen

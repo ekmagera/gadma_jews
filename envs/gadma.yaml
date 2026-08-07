@@ -1,0 +1,9 @@
+name: jews-demography-gadma
+channels: [conda-forge, bioconda]
+dependencies:
+  - python=3.10
+  - pip
+  - pip:
+      - gadma==2.0.0
+      - moments-popgen
+

@@ -1,0 +1,32 @@
+input_bcf: raw/jews.bcf
+metadata: metadata/samples.csv
+
+populations:
+  A: Ashkenazi Jews
+  G: Georgian Jews
+  M: Mountain Jews
+
+# Folded SFS projections (chromosomes), deliberately conservative.
+# Revisit after results/sfs/preview.txt is generated.
+projections: [40, 20, 40]
+
+qc:
+  min_alleles: 2
+  max_alleles: 2
+  min_gq: 20
+  min_dp: 8
+  max_dp: 60
+  max_missing: 0.05
+  min_mac: 2
+  ld_window_kb: 200
+  ld_step: 50
+  ld_r2: 0.2
+  king_cutoff: 0.0884
+
+gadma:
+  repeats: 8
+  processes: 4
+  generation_time: null
+  mutation_rate: null
+  sequence_length: null
+
