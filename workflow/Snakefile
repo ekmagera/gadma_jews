@@ -1,4 +1,4 @@
-configfile: "config/config.yaml"
+﻿configfile: "config/config.yaml"
 
 MODELS = ["S0", "T1", "T2", "T3"]
 POPS = list(config["populations"].keys())
@@ -59,17 +59,17 @@ rule unrelated_vcf:
     shell: "bcftools view -S {input.keep} -Oz -o {output} {input.bcf} && tabix -f -p vcf {output}"
 
 rule sfs_preview:
-    input: vcf="results/qc/unrelated.vcf.gz", pop="results/sfs/populations.tsv"
+    input: vcf="results/qc/unrelated.vcf.gz", popfile="results/sfs/populations.tsv"
     output: "results/sfs/preview.txt"
     conda: "../envs/sfs.yaml"
-    shell: "easySFS.py -i {input.vcf} -p {input.pop} --preview > {output}"
+    shell: "easySFS.py -i {input.vcf} -p {input.popfile} --preview > {output}"
 
 rule sfs:
-    input: vcf="results/qc/unrelated.vcf.gz", pop="results/sfs/populations.tsv", preview="results/sfs/preview.txt"
+    input: vcf="results/qc/unrelated.vcf.gz", popfile="results/sfs/populations.tsv", preview="results/sfs/preview.txt"
     output: "results/sfs/dadi/A-G-M-{proj}.sfs"
     params: proj=PROJ
     conda: "../envs/sfs.yaml"
-    shell: "easySFS.py -i {input.vcf} -p {input.pop} --proj {params.proj} -a -f -o results/sfs && test -s {output}"
+    shell: "easySFS.py -i {input.vcf} -p {input.popfile} --proj {params.proj} -a -f -o results/sfs && test -s {output}"
 
 rule gadma_params:
     input: sfs="results/sfs/dadi/A-G-M-{proj}.sfs"
@@ -82,3 +82,4 @@ rule gadma:
     output: "results/gadma/{model}/GADMA.log"
     conda: "../envs/gadma.yaml"
     shell: "gadma -p {input}"
+
