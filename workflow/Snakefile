@@ -1,4 +1,4 @@
-configfile: "../config/config.yaml"
+configfile: "config/config.yaml"
 
 MODELS = ["S0", "T1", "T2", "T3"]
 POPS = list(config["populations"].keys())
@@ -82,4 +82,3 @@ rule gadma:
     output: "results/gadma/{model}/GADMA.log"
     conda: "../envs/gadma.yaml"
     shell: "gadma -p {input}"
-
