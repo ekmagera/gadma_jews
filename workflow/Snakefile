@@ -22,9 +22,8 @@ rule normalize_filter:
     output: "results/qc/filtered.bcf"
     shell:
         "bcftools view -m{QC[min_alleles]} -M{QC[max_alleles]} -v snps {input.bcf} -Ou | "
-        "bcftools filter -e 'F_MISSING>{QC[max_missing]} || MAC<{QC[min_mac]}' -S . -Ou | "
-        "bcftools +setGT -Ou -- -t q -n . -i 'FMT/GQ<{QC[min_gq]} || FMT/DP<{QC[min_dp]} || FMT/DP>{QC[max_dp]}' | "
-        "bcftools view -Ob -o {output} && bcftools index -f {output}"
+        "bcftools filter -e 'F_MISSING>{QC[max_missing]} || MAC<{QC[min_mac]}' -S . -Ob -o {output} && "
+        "bcftools index -f {output}"
 
 rule plink_import:
     input: "results/qc/filtered.bcf"
