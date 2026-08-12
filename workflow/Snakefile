@@ -28,7 +28,7 @@ rule normalize_filter:
 rule plink_import:
     input: "results/qc/filtered.bcf"
     output: "results/qc/plink.pgen", "results/qc/plink.pvar", "results/qc/plink.psam"
-    shell: "plink2 --bcf {input} --make-pgen --out results/qc/plink"
+    shell: "plink2 --bcf {input} --chr 1-22 --make-pgen --out results/qc/plink"
 
 rule ld_prune:
     input: "results/qc/plink.pgen", "results/qc/plink.pvar", "results/qc/plink.psam"
