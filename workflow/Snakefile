@@ -48,7 +48,7 @@ rule popfile:
 rule unrelated_vcf:
     input: bcf="results/qc/filtered.bcf", keep="results/qc/unrelated.king.cutoff.in.id"
     output: "results/qc/unrelated.vcf.gz"
-    shell: "awk 'NR>1 {print $2}' {input.keep} | bcftools view -S - -Oz -o {output} {input.bcf} && tabix -f -p vcf {output}"
+    shell: "awk 'NR>1 {{print $2}}' {input.keep} | bcftools view -S - -Oz -o {output} {input.bcf} && tabix -f -p vcf {output}"
 
 rule sfs_preview:
     input: vcf="results/qc/unrelated.vcf.gz", popfile="results/sfs/populations.tsv"
