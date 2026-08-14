@@ -70,5 +70,5 @@ rule gadma_params:
 rule gadma:
     input: "results/gadma/{model}.params"
     output: "results/gadma/{model}/GADMA.log"
-    shell: "PYTHONPATH=\"/work/models:$PYTHONPATH\" gadma -p {input}"
+    shell: "PYTHONPATH=/work/models gadma -p {input}"
 
