@@ -15,3 +15,4 @@ dependencies:
   - pip:
       - gadma==2.0.0
       - moments-popgen
+      - 'ruamel.yaml<0.18'
