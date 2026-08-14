@@ -4,6 +4,7 @@ MODELS = ["S0", "T1", "T2", "T3"]
 POPS = list(config["populations"].keys())
 POP_ARGS = [f"{name}={code}" for code, name in config["populations"].items()]
 PROJ = ",".join(map(str, config["projections"]))
+SFS_PATH = f"results/sfs/dadi/A-G-M-{PROJ}.sfs"
 QC = config["qc"]
 
 rule all:
@@ -57,12 +58,12 @@ rule sfs_preview:
 
 rule sfs:
     input: vcf="results/qc/unrelated.vcf.gz", popfile="results/sfs/populations.tsv", preview="results/sfs/preview.txt"
-    output: "results/sfs/dadi/A-G-M-{proj}.sfs"
+    output: SFS_PATH
     params: proj=PROJ
     shell: "printf 'yes\\n' | easySFS.py -i {input.vcf} -p {input.popfile} --proj {params.proj} -a -f -o results/sfs && test -s {output}"
 
 rule gadma_params:
-    input: sfs="results/sfs/dadi/A-G-M-{proj}.sfs"
+    input: sfs=SFS_PATH
     output: "results/gadma/{model}.params"
     shell: "python workflow/scripts/render_gadma_params.py config/config.yaml {wildcards.model} {input.sfs} {output}"
 
