@@ -5,10 +5,10 @@ import yaml
 cfg_path, model, sfs, output = sys.argv[1:]
 cfg = yaml.safe_load(open(cfg_path, encoding="utf-8"))["gadma"]
 models = {
-    "S0": ("models/S0_simultaneous.py", "N N N T m m m"),
-    "T1": ("models/T1_A_GM.py", "N N N T T m m m m"),
-    "T2": ("models/T2_G_AM.py", "N N N T T m m m m"),
-    "T3": ("models/T3_M_AG.py", "N N N T T m m m m"),
+    "S0": ("models/S0_simultaneous.py", "Null"),
+    "T1": ("models/T1_A_GM.py", "Null"),
+    "T2": ("models/T2_G_AM.py", "Null"),
+    "T3": ("models/T3_M_AG.py", "Null"),
 }
 filename, identifiers = models[model]
 lines = [
