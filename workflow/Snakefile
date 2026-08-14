@@ -4,7 +4,7 @@ MODELS = ["S0", "T1", "T2", "T3"]
 POPS = list(config["populations"].keys())
 POP_ARGS = [f"{name}={code}" for code, name in config["populations"].items()]
 PROJ = ",".join(map(str, config["projections"]))
-SFS_PATH = f"results/sfs/dadi/A-G-M-{PROJ}.sfs"
+SFS_PATH = "results/sfs/dadi/A-G-M.sfs"
 QC = config["qc"]
 
 rule all:
