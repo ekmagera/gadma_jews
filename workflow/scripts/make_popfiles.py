@@ -9,6 +9,7 @@ rows = list(csv.DictReader(open(metadata, newline="", encoding="utf-8")))
 selected = [(r["ID"], mapping[r["Population"]]) for r in rows if r["ID"] in keep_ids]
 if not selected:
     raise SystemExit("No unrelated samples remain")
+order = {code: i for i, code in enumerate(("A", "G", "M"))}
+selected.sort(key=lambda x: (order.get(x[1], 999), x[0]))
 Path(popfile).parent.mkdir(parents=True, exist_ok=True)
 Path(popfile).write_text("\n".join(f"{sample}\t{pop}" for sample, pop in selected) + "\n")
-
