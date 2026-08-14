@@ -5,10 +5,10 @@ import yaml
 cfg_path, model, sfs, output = sys.argv[1:]
 cfg = yaml.safe_load(open(cfg_path, encoding="utf-8"))["gadma"]
 models = {
-    "S0": ("models/S0_simultaneous.py", "N,N,N,T,m,m,m"),
-    "T1": ("models/T1_A_GM.py", "N,N,N,T,T,m,m,m,m"),
-    "T2": ("models/T2_G_AM.py", "N,N,N,T,T,m,m,m,m"),
-    "T3": ("models/T3_M_AG.py", "N,N,N,T,T,m,m,m,m"),
+    "S0": ("models/S0_simultaneous.py", "N N N T m m m"),
+    "T1": ("models/T1_A_GM.py", "N N N T T m m m m"),
+    "T2": ("models/T2_G_AM.py", "N N N T T m m m m"),
+    "T3": ("models/T3_M_AG.py", "N N N T T m m m m"),
 }
 filename, identifiers = models[model]
 lines = [
@@ -23,4 +23,3 @@ for label, key in optional:
         lines.append(f"{label}: {cfg[key]}")
 Path(output).parent.mkdir(parents=True, exist_ok=True)
 Path(output).write_text("\n".join(lines) + "\n", encoding="utf-8")
-
