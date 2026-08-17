@@ -18,18 +18,32 @@ rule validate:
         "python workflow/scripts/validate_metadata.py {input.bcf} {input.metadata} {output} " +
         " ".join("'" + p + "'" for p in config["populations"].values())
 
-rule normalize_filter:
-    input: bcf=config["input_bcf"], checked="results/qc/metadata_validation.txt"
-    output: "results/qc/filtered.bcf"
+rule detect_autosomes:
+    input: bcf=config["input_bcf"]
+    output: "results/qc/autosome_contigs.txt"
     shell:
-        "bcftools view -m{QC[min_alleles]} -M{QC[max_alleles]} -v snps {input.bcf} -Ou | "
-        "bcftools filter -e 'F_MISSING>{QC[max_missing]} || MAC<{QC[min_mac]}' -S . -Ob -o {output} && "
-        "bcftools index -f {output}"
+        "bcftools view -h {input.bcf} | "
+        "python workflow/scripts/detect_autosomes.py {output}"
+
+rule normalize_filter_autosomes:
+    input:
+        bcf=config["input_bcf"],
+        checked="results/qc/metadata_validation.txt",
+        contigs="results/qc/autosome_contigs.txt"
+    output:
+        bcf="results/qc/autosomes.filtered.bcf",
+        csi="results/qc/autosomes.filtered.bcf.csi",
+        summary="results/qc/autosomes.variant_counts.tsv"
+    shell:
+        "bcftools view -T {input.contigs} -m{QC[min_alleles]} -M{QC[max_alleles]} -v snps {input.bcf} -Ou | "
+        "bcftools filter -e 'F_MISSING>{QC[max_missing]} || MAC<{QC[min_mac]}' -S . -Ob -o {output.bcf} && "
+        "bcftools index -f {output.bcf} && "
+        "bcftools index -s {output.bcf} > {output.summary}"
 
 rule plink_import:
-    input: "results/qc/filtered.bcf"
+    input: "results/qc/autosomes.filtered.bcf"
     output: "results/qc/plink.pgen", "results/qc/plink.pvar", "results/qc/plink.psam"
-    shell: "plink2 --bcf {input} --chr 1-22 --make-pgen --out results/qc/plink"
+    shell: "plink2 --bcf {input} --make-pgen --out results/qc/plink"
 
 rule ld_prune:
     input: "results/qc/plink.pgen", "results/qc/plink.pvar", "results/qc/plink.psam"
@@ -47,7 +61,7 @@ rule popfile:
     shell: "python workflow/scripts/make_popfiles.py {input.metadata} {input.keep} {output} " + " ".join("'" + x + "'" for x in POP_ARGS)
 
 rule unrelated_vcf:
-    input: bcf="results/qc/filtered.bcf", keep="results/qc/unrelated.king.cutoff.in.id"
+    input: bcf="results/qc/autosomes.filtered.bcf", keep="results/qc/unrelated.king.cutoff.in.id"
     output: "results/qc/unrelated.vcf.gz"
     shell: "awk 'NR>1 {{print $1}}' {input.keep} | bcftools view -S - -Oz -o {output} {input.bcf} && tabix -f -p vcf {output}"
 
