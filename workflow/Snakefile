@@ -69,7 +69,7 @@ rule unrelated_vcf:
 rule sfs_preview:
     input: vcf="results/qc/unrelated.vcf.gz", popfile="results/sfs/populations.tsv"
     output: "results/sfs/preview.txt"
-    shell: "printf 'yes\\n' | easySFS.py -i {input.vcf} -p {input.popfile} --preview > {output}"
+    shell: "printf 'yes\\n' | easySFS.py -i {input.vcf} -p {input.popfile} --preview -a > {output}"
 
 rule sfs:
     input: vcf="results/qc/unrelated.vcf.gz", popfile="results/sfs/populations.tsv", preview="results/sfs/preview.txt"
