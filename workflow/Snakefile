@@ -72,7 +72,7 @@ rule sfs_preview:
     shell: "printf 'yes\\n' | easySFS.py -i {input.vcf} -p {input.popfile} --preview -a > {output}"
 
 rule sfs:
-    input: vcf="results/qc/unrelated.vcf.gz", popfile="results/sfs/populations.tsv", preview="results/sfs/preview.txt"
+    input: vcf="results/qc/unrelated.vcf.gz", popfile="results/sfs/populations.tsv"
     output: SFS_PATH
     params: proj=PROJ
     shell: "printf 'yes\\n' | easySFS.py -i {input.vcf} -p {input.popfile} --proj {params.proj} -a -f -o results/sfs && test -s {output}"
