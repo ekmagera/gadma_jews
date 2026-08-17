@@ -84,6 +84,7 @@ rule gadma_params:
 rule gadma:
     input: "results/gadma/{model}.params"
     output: "results/gadma/{model}/GADMA.log"
+    threads: config["gadma"]["processes"]
     shell:
         "rm -rf results/gadma/{wildcards.model} && "
         "PYTHONPATH=/work/models gadma -p {input}"
