@@ -6,9 +6,8 @@ populations:
   G: Georgian Jews
   M: Mountain Jews
 
-# Folded SFS projections (chromosomes), deliberately conservative.
-# Revisit after results/sfs/preview.txt is generated.
-projections: [70, 20, 70]
+# Folded SFS projections (chromosomes), selected from the autosomal -a preview.
+projections: [74, 24, 88]
 
 qc:
   min_alleles: 2
