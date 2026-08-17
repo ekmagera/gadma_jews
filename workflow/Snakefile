@@ -35,7 +35,8 @@ rule normalize_filter_autosomes:
         csi="results/qc/autosomes.filtered.bcf.csi",
         summary="results/qc/autosomes.variant_counts.tsv"
     shell:
-        "bcftools view -T {input.contigs} -m{QC[min_alleles]} -M{QC[max_alleles]} -v snps {input.bcf} -Ou | "
+        "autosomes=$(paste -sd, {input.contigs}) && "
+        "bcftools view -t \"$autosomes\" -m{QC[min_alleles]} -M{QC[max_alleles]} -v snps {input.bcf} -Ou | "
         "bcftools filter -e 'F_MISSING>{QC[max_missing]} || MAC<{QC[min_mac]}' -S . -Ob -o {output.bcf} && "
         "bcftools index -f {output.bcf} && "
         "bcftools index -s {output.bcf} > {output.summary}"
