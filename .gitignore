@@ -6,4 +6,5 @@ results/
 *.log
 __pycache__/
 *.pyc
-
+analysis_*/
+handoff_*.tar.gz

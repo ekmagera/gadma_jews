@@ -11,6 +11,7 @@ dependencies:
   - numpy
   - scipy
   - pandas
+  - pyyaml
   - pip
   - pip:
       - gadma==2.0.0

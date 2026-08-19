@@ -1,0 +1,24 @@
+# Number of callable neutral autosomal bases represented by the SFS.
+# This must come from the callable mask / data provider. Do not use the
+# number of SNPs or the full reference genome length.
+sequence_length: null
+
+# Mutation-rate and generation-time sensitivity analysis. These values only
+# rescale a fitted model; they do not change likelihood, AIC or topology.
+scenarios:
+  - name: central
+    mutation_rate: 1.20e-8
+    generation_time_years: 28.1
+  - name: lower_mu_short_generation
+    mutation_rate: 1.10e-8
+    generation_time_years: 26.0
+  - name: higher_mu_long_generation
+    mutation_rate: 1.30e-8
+    generation_time_years: 30.0
+
+# A scenario may override the top-level length when uncertainty in the callable
+# mask must also be propagated, for example:
+#  - name: shorter_callable_length
+#    mutation_rate: 1.20e-8
+#    generation_time_years: 28.1
+#    sequence_length: 1234567890

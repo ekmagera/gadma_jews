@@ -23,8 +23,15 @@ qc:
   king_cutoff: 0.0884
 
 gadma:
-  repeats: 8
+  # Screening of all four topologies.
+  selection_repeats: 8
+  # Additional independent starts for the selected topology only.
+  refinement_repeats: 16
   processes: 4
-  generation_time: null
-  mutation_rate: null
-  sequence_length: null
+  # Explicit genetic-unit bounds used identically for every topology.
+  # If any best fit hits a bound, change it here and rerun `select` for ALL
+  # models before interpreting AIC.
+  bounds:
+    population_size: [0.01, 100.0]
+    time: [1.0e-15, 5.0]
+    migration: [0.0, 10.0]

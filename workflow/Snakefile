@@ -6,10 +6,15 @@ POP_ARGS = [f"{name}={code}" for code, name in config["populations"].items()]
 PROJ = ",".join(map(str, config["projections"]))
 SFS_PATH = "results/sfs/dadi/A-G-M.sfs"
 QC = config["qc"]
+GADMA = config["gadma"]
+BOUNDS = GADMA["bounds"]
+
+wildcard_constraints:
+    model="S0|T1|T2|T3"
 
 rule all:
     input:
-        expand("results/gadma/{model}/GADMA.log", model=MODELS)
+        "results/model_selection/aic.tsv"
 
 rule validate:
     input: bcf=config["input_bcf"], metadata=config["metadata"]
@@ -80,13 +85,70 @@ rule sfs:
 rule gadma_params:
     input: sfs=SFS_PATH
     output: "results/gadma/{model}.params"
-    shell: "python workflow/scripts/render_gadma_params.py config/config.yaml {wildcards.model} {input.sfs} {output}"
+    params:
+        output_directory=lambda wildcards: f"results/gadma/{wildcards.model}",
+        repeats=GADMA["selection_repeats"],
+        processes=GADMA["processes"],
+        bounds=lambda wildcards: " ".join(map(str, [
+            *BOUNDS["population_size"], *BOUNDS["time"], *BOUNDS["migration"]
+        ]))
+    shell:
+        "python workflow/scripts/render_gadma_params.py {wildcards.model} {input.sfs} {output} "
+        "{params.output_directory} {params.repeats} {params.processes} {params.bounds}"
 
 rule gadma:
     input: "results/gadma/{model}.params"
     output: "results/gadma/{model}/GADMA.log"
-    threads: config["gadma"]["processes"]
+    threads: GADMA["processes"]
     shell:
         "rm -rf results/gadma/{wildcards.model} && "
         "PYTHONPATH=/work/models gadma -p {input}"
+
+rule model_selection_report:
+    input: expand("results/gadma/{model}/GADMA.log", model=MODELS)
+    output:
+        table="results/model_selection/aic.tsv",
+        winner="results/model_selection/winner.txt"
+    shell:
+        "python workflow/scripts/summarize_aic.py results/gadma {output.table} {output.winner}"
+
+rule refinement_params:
+    input: sfs=SFS_PATH
+    output: "results/refinement/{model}.params"
+    params:
+        output_directory=lambda wildcards: f"results/refinement/{wildcards.model}",
+        repeats=GADMA["refinement_repeats"],
+        processes=GADMA["processes"],
+        bounds=lambda wildcards: " ".join(map(str, [
+            *BOUNDS["population_size"], *BOUNDS["time"], *BOUNDS["migration"]
+        ]))
+    shell:
+        "python workflow/scripts/render_gadma_params.py {wildcards.model} {input.sfs} {output} "
+        "{params.output_directory} {params.repeats} {params.processes} {params.bounds}"
+
+rule refine_model:
+    input: "results/refinement/{model}.params"
+    output: "results/refinement/{model}/GADMA.log"
+    threads: GADMA["processes"]
+    shell:
+        "rm -rf results/refinement/{wildcards.model} && "
+        "PYTHONPATH=/work/models gadma -p {input}"
+
+rule scale_refined_model:
+    input:
+        log="results/refinement/{model}/GADMA.log",
+        sfs=SFS_PATH,
+        scenarios="config/scaling_scenarios.yaml"
+    output: "results/scaling/{model}.tsv"
+    params:
+        code=lambda wildcards: f"results/refinement/{wildcards.model}/best_logLL_model_moments_code.py"
+    shell:
+        "python workflow/scripts/scale_demography.py {wildcards.model} {params.code} "
+        "{input.sfs} {input.scenarios} {output}"
+
+rule smoke_models:
+    input: sfs=SFS_PATH
+    output: "results/smoke/model_evaluation.tsv"
+    shell:
+        "PYTHONPATH=/work/models python workflow/scripts/smoke_models.py {input.sfs} {output}"
 
