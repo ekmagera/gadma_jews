@@ -1,5 +1,6 @@
 raw/*
 !raw/.gitkeep
+metadata/samples.csv
 results/
 .snakemake/
 .reference/
@@ -7,4 +8,3 @@ results/
 __pycache__/
 *.pyc
 analysis_*/
-handoff_*.tar.gz

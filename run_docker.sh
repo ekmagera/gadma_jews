@@ -13,8 +13,6 @@ Usage:
   bash run_docker.sh refine [MODEL] [cores]
                                            Refit winner (or explicit S0/T1/T2/T3)
   bash run_docker.sh scale [MODEL] [cores]  Scale refined winner using scenarios
-  bash run_docker.sh pack                   Create a genotype-free handoff archive
-
 There is no built-in wall-clock limit. GADMA stops according to its optimization
 criteria and the configured number of independent repeats.
 EOF
@@ -26,7 +24,7 @@ if [[ -z "$command_name" || "$command_name" == "help" || "$command_name" == "--h
   exit 0
 fi
 
-if [[ "$command_name" != "pack" && ! -s raw/jews.bcf ]]; then
+if [[ ! -s raw/jews.bcf ]]; then
   echo "Missing raw/jews.bcf. Copy the input BCF before running the workflow." >&2
   exit 1
 fi
@@ -87,45 +85,6 @@ case "$command_name" in
     model="${2:-$(read_winner)}"
     case "$model" in S0|T1|T2|T3) ;; *) echo "Unknown model: $model" >&2; exit 1 ;; esac
     run_snakemake "${3:-1}" --force "results/scaling/$model.tsv"
-    ;;
-  pack)
-    timestamp="$(date +%Y%m%d_%H%M%S)"
-    archive="handoff_${timestamp}.tar.gz"
-    mkdir -p results
-    {
-      printf 'created_utc\t%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-      printf 'git_commit\t%s\n' "$(git rev-parse HEAD 2>/dev/null || printf unknown)"
-      printf 'raw_genotypes_included\tno\n'
-    } > results/handoff_manifest.tsv
-    candidates=(
-      README.md
-      docs/HANDOFF_RU.md
-      docs/PARAMETERS_RU.md
-      config/config.yaml
-      config/scaling_scenarios.yaml
-      results/handoff_manifest.tsv
-      results/qc/metadata_validation.txt
-      results/qc/autosome_contigs.txt
-      results/qc/autosomes.variant_counts.tsv
-      results/qc/unrelated.king.cutoff.in.id
-      results/qc/unrelated.king.cutoff.out.id
-      results/sfs/populations.tsv
-      results/sfs/preview.txt
-      results/sfs/selected_projections.txt
-      results/sfs/selected_projections.tsv
-      results/sfs/dadi/A-G-M.sfs
-      results/model_selection
-      results/gadma
-      results/refinement
-      results/scaling
-      results/smoke
-    )
-    files=()
-    for path in "${candidates[@]}"; do
-      [[ -e "$path" ]] && files+=("$path")
-    done
-    tar -czf "$archive" "${files[@]}"
-    echo "Created $archive (raw BCF, filtered VCF/BCF and PLINK files are excluded)."
     ;;
   *)
     usage >&2
