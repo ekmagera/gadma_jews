@@ -16,13 +16,18 @@ cat results/qc/metadata_validation.txt
 cat results/qc/autosomes.variant_counts.tsv
 cat results/sfs/preview.txt
 
-Проверьте, что остались только 22 аутосомы. По preview выберите проекции и запишите их в config/config.yaml в порядке A,G,M. Значения из репозитория являются тестовыми и не должны автоматически использоваться для новых данных.
+Проверьте, что остались только 22 аутосомы. Проекции выбираются отдельно для каждого нового набора данных. По умолчанию workflow автоматически берёт минимальную проекцию, сохраняющую не менее 99% максимального числа сегрегирующих сайтов.
 
 bash run_docker.sh sfs 8
+cat results/sfs/selected_projections.tsv
 bash run_docker.sh smoke 4
 cat results/smoke/model_evaluation.tsv
 
+Проверьте selected_projections.tsv. В config/config.yaml можно выбрать режим auto, строгий максимум max или ручной manual. Правила выбора и параметры производительности описаны в docs/PARAMETERS_RU.md.
+
 Smoke проверяет только чтение SFS и функции моделей. Если нужен только технический тест репозитория, на этом можно остановиться.
+
+Для непрерывного расчёта можно сразу выполнить bash run_docker.sh select 8: Snakemake сам последовательно выполнит QC, preview, автоматический выбор проекций, построение SFS и оптимизацию моделей.
 
 bash run_docker.sh select 8
 cat results/model_selection/aic.tsv
@@ -43,4 +48,4 @@ bash run_docker.sh pack
 
 Встроенного ограничения по времени нет. GADMA завершает каждый repeat по критерию сходимости. Количество запусков задают gadma.selection_repeats и gadma.refinement_repeats, параллельность — gadma.processes и аргумент cores. Полный расчёт может занимать несколько дней; внешний walltime должен быть задан с запасом, потому что незавершённая модель при повторном запуске начинается сначала.
 
-Подробная инструкция и литературные источники находятся в docs/HANDOFF_RU.md.
+Подробная инструкция и литературные источники находятся в docs/HANDOFF_RU.md, выбор параметров — в docs/PARAMETERS_RU.md.

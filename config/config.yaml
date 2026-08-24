@@ -6,8 +6,14 @@ populations:
   G: Georgian Jews
   M: Mountain Jews
 
-# Folded SFS projections (chromosomes), selected from the autosomal -a preview.
-projections: [74, 24, 88]
+# Folded SFS projections are selected from the autosomal easySFS preview.
+# auto: smallest projection retaining the configured fraction of the maximum
+# number of segregating sites; max: projection with the absolute maximum;
+# manual: use the values below. Population order is A, G, M.
+projection_selection:
+  mode: auto
+  min_fraction_of_max_sites: 0.99
+  manual: [74, 24, 88]
 
 qc:
   min_alleles: 2

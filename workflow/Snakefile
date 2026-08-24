@@ -3,7 +3,7 @@ configfile: "config/config.yaml"
 MODELS = ["S0", "T1", "T2", "T3"]
 POPS = list(config["populations"].keys())
 POP_ARGS = [f"{name}={code}" for code, name in config["populations"].items()]
-PROJ = ",".join(map(str, config["projections"]))
+PROJECTION = config["projection_selection"]
 SFS_PATH = "results/sfs/dadi/A-G-M.sfs"
 QC = config["qc"]
 GADMA = config["gadma"]
@@ -76,11 +76,31 @@ rule sfs_preview:
     output: "results/sfs/preview.txt"
     shell: "printf 'yes\\n' | easySFS.py -i {input.vcf} -p {input.popfile} --preview -a > {output}"
 
+rule select_projections:
+    input: "results/sfs/preview.txt"
+    output:
+        values="results/sfs/selected_projections.txt",
+        report="results/sfs/selected_projections.tsv"
+    params:
+        mode=PROJECTION["mode"],
+        fraction=PROJECTION["min_fraction_of_max_sites"],
+        populations=",".join(POPS),
+        manual=",".join(map(str, PROJECTION["manual"]))
+    shell:
+        "python workflow/scripts/select_projections.py {input} {output.values} "
+        "{output.report} {params.mode} {params.fraction} "
+        "{params.populations} {params.manual}"
+
 rule sfs:
-    input: vcf="results/qc/unrelated.vcf.gz", popfile="results/sfs/populations.tsv"
+    input:
+        vcf="results/qc/unrelated.vcf.gz",
+        popfile="results/sfs/populations.tsv",
+        projections="results/sfs/selected_projections.txt"
     output: SFS_PATH
-    params: proj=PROJ
-    shell: "printf 'yes\\n' | easySFS.py -i {input.vcf} -p {input.popfile} --proj {params.proj} -a -f -o results/sfs && test -s {output}"
+    shell:
+        "projections=$(tr -d '[:space:]' < {input.projections}) && "
+        "printf 'yes\\n' | easySFS.py -i {input.vcf} -p {input.popfile} "
+        "--proj \"$projections\" -a -f -o results/sfs && test -s {output}"
 
 rule gadma_params:
     input: sfs=SFS_PATH

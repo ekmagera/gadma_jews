@@ -31,7 +31,7 @@ cp /path/to/input.bcf raw/jews.bcf
 
 Если Docker доступен только через `sudo`, launcher сам попробует `sudo docker`. Команду `bash run_docker.sh ...` запускать от своего пользователя, не через `sudo`.
 
-## 1. QC и ручной выбор проекций
+## 1. QC и выбор проекций
 
 ```bash
 bash run_docker.sh preview 8
@@ -40,14 +40,17 @@ cat results/qc/autosomes.variant_counts.tsv
 cat results/sfs/preview.txt
 ```
 
-Проверить 22 аутосомы, состав выборок после KING и порядок популяций `A, G, M`. Выбрать проекции по максимуму/плато числа сегрегирующих сайтов и записать их в `config/config.yaml` в порядке `A, G, M`.
+Проверить 22 аутосомы, состав выборок после KING и порядок популяций `A, G, M`. По умолчанию workflow автоматически выбирает для каждой популяции минимальную проекцию, сохраняющую не менее 99% максимального числа сегрегирующих сайтов. Это уменьшает размер трёхмерного SFS без ручной паузы.
 
 ```bash
 bash run_docker.sh sfs 8
+cat results/sfs/selected_projections.tsv
 head -n 1 results/sfs/dadi/A-G-M.sfs
 ```
 
 Размерности SFS должны быть равны `projection + 1`.
+
+Автоматическое решение и его статистика записываются в `results/sfs/selected_projections.tsv`. Режимы `auto`, `max` и `manual`, а также рекомендации по вычислительным параметрам описаны в `docs/PARAMETERS_RU.md`.
 
 ## 2. Быстрый технический тест
 

@@ -5,7 +5,8 @@ usage() {
   cat <<'EOF'
 Usage:
   bash run_docker.sh preview [cores]       Build QC data and easySFS preview
-  bash run_docker.sh sfs [cores]           Build SFS using projections from config
+  bash run_docker.sh projections [cores]   Select projections and write a report
+  bash run_docker.sh sfs [cores]           Select projections and build SFS
   bash run_docker.sh smoke [cores]         Evaluate all model functions once
   bash run_docker.sh select [cores]        Fit S0/T1/T2/T3 and write AIC report
   bash run_docker.sh report [cores]        Rebuild AIC report from existing logs
@@ -60,8 +61,13 @@ case "$command_name" in
   preview)
     run_snakemake "${2:-8}" --force results/sfs/preview.txt
     ;;
+  projections)
+    run_snakemake "${2:-1}" --force results/sfs/selected_projections.tsv
+    cat results/sfs/selected_projections.tsv
+    ;;
   sfs)
     run_snakemake "${2:-8}" --force results/sfs/dadi/A-G-M.sfs
+    cat results/sfs/selected_projections.tsv
     ;;
   smoke)
     run_snakemake "${2:-4}" --force results/smoke/model_evaluation.tsv
@@ -94,6 +100,7 @@ case "$command_name" in
     candidates=(
       README.md
       docs/HANDOFF_RU.md
+      docs/PARAMETERS_RU.md
       config/config.yaml
       config/scaling_scenarios.yaml
       results/handoff_manifest.tsv
@@ -104,6 +111,8 @@ case "$command_name" in
       results/qc/unrelated.king.cutoff.out.id
       results/sfs/populations.tsv
       results/sfs/preview.txt
+      results/sfs/selected_projections.txt
+      results/sfs/selected_projections.tsv
       results/sfs/dadi/A-G-M.sfs
       results/model_selection
       results/gadma
